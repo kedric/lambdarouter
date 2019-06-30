@@ -20,7 +20,7 @@ type TreeMux struct {
 	PanicHandler PanicHandler
 
 	// The default NotFoundHandler is http.NotFound.
-	NotFoundHandler Handle
+	NotFoundHandler HandlerFunc
 
 	// Any OPTIONS request that matches a path without its own OPTIONS handler will use this handler,
 	// if set, instead of calling MethodNotAllowedHandler.
@@ -115,36 +115,36 @@ func (cm *ContextMux) NewGroup(path string) *ContextGroup {
 }
 
 // GET is convenience method for handling GET requests on a context group.
-func (cm *ContextMux) GET(path string, handler Handle) {
+func (cm *ContextMux) GET(path string, handler HandlerFunc) {
 	cm.ContextGroup.Handle("GET", path, handler)
 }
 
 // POST is convenience method for handling POST requests on a context group.
-func (cm *ContextMux) POST(path string, handler Handle) {
+func (cm *ContextMux) POST(path string, handler HandlerFunc) {
 	cm.ContextGroup.Handle("POST", path, handler)
 }
 
 // PUT is convenience method for handling PUT requests on a context group.
-func (cm *ContextMux) PUT(path string, handler Handle) {
+func (cm *ContextMux) PUT(path string, handler HandlerFunc) {
 	cm.ContextGroup.Handle("PUT", path, handler)
 }
 
 // DELETE is convenience method for handling DELETE requests on a context group.
-func (cm *ContextMux) DELETE(path string, handler Handle) {
+func (cm *ContextMux) DELETE(path string, handler HandlerFunc) {
 	cm.ContextGroup.Handle("DELETE", path, handler)
 }
 
 // PATCH is convenience method for handling PATCH requests on a context group.
-func (cm *ContextMux) PATCH(path string, handler Handle) {
+func (cm *ContextMux) PATCH(path string, handler HandlerFunc) {
 	cm.ContextGroup.Handle("PATCH", path, handler)
 }
 
 // HEAD is convenience method for handling HEAD requests on a context group.
-func (cm *ContextMux) HEAD(path string, handler Handle) {
+func (cm *ContextMux) HEAD(path string, handler HandlerFunc) {
 	cm.ContextGroup.Handle("HEAD", path, handler)
 }
 
 // OPTIONS is convenience method for handling OPTIONS requests on a context group.
-func (cm *ContextMux) OPTIONS(path string, handler Handle) {
+func (cm *ContextMux) OPTIONS(path string, handler HandlerFunc) {
 	cm.ContextGroup.Handle("OPTIONS", path, handler)
 }
