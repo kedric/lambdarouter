@@ -11,8 +11,9 @@ import (
 )
 
 type TreeMux struct {
-	root  *node
-	mutex sync.RWMutex
+	StageVariables StageVariables
+	root           *node
+	mutex          sync.RWMutex
 
 	Group
 

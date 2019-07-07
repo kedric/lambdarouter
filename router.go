@@ -6,10 +6,12 @@ package lambdarouter
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -117,21 +119,6 @@ func (t *TreeMux) lookup(request events.APIGatewayProxyRequest) (result LookupRe
 	unescapedPath := request.Path
 	pathLen := len(path)
 	methode := request.HTTPMethod
-	rawQuery := LambdaGenerateRawQuery(request)
-	if pathLen > 0 && t.PathSource == RequestURI {
-		rawQueryLen := len(rawQuery)
-
-		if rawQueryLen != 0 || path[pathLen-1] == '?' {
-			// Remove any query string and the ?.
-			path = path[:pathLen-rawQueryLen-1]
-			pathLen = len(path)
-		}
-	} else {
-		// In testing with http.NewRequest,
-		// RequestURI is not set so just grab URL.Path instead.
-		path = request.Path
-		pathLen = len(path)
-	}
 
 	trailingSlash := path[pathLen-1] == '/' && pathLen > 1
 	if trailingSlash && t.RedirectTrailingSlash {
@@ -270,6 +257,9 @@ func (t *TreeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	event, _ := RequestToLambda(r)
 	result, _ := t.lookup(event)
+	event.RequestContext.Stage = result.params["__stage__"]
+	event.StageVariables = t.StageVariables[result.params["__stage__"]]
+	delete(result.params, "__stage__")
 	event.PathParameters = result.params
 	if t.SafeAddRoutesWhileRunning {
 		t.mutex.RUnlock()
@@ -283,7 +273,11 @@ func (t *TreeMux) ServeLambda(ctx context.Context, req events.APIGatewayProxyReq
 	// if t.PanicHandler != nil {
 	// 	defer t.serveHTTPPanic(w, r)
 	// }
-
+	data, _ := json.Marshal(req)
+	fmt.Printf("%s\n", data)
+	req.Path = CleanPath(req)
+	data, _ = json.Marshal(req)
+	fmt.Printf("%s\n", data)
 	if t.SafeAddRoutesWhileRunning {
 		// In concurrency safe mode, we acquire a read lock on the mutex for any access.
 		// This is optional to avoid potential performance loss in high-usage scenarios.
@@ -291,7 +285,9 @@ func (t *TreeMux) ServeLambda(ctx context.Context, req events.APIGatewayProxyReq
 	}
 
 	result, _ := t.lookup(req)
-
+	if strings.Contains(req.Resource, "{proxy+}") {
+		req.PathParameters = result.params
+	}
 	if t.SafeAddRoutesWhileRunning {
 		t.mutex.RUnlock()
 	}
@@ -330,7 +326,10 @@ func New() *TreeMux {
 	return tm
 }
 
-func (r *TreeMux) Serve(addr string) error {
+type StageVariables map[string]map[string]string
+
+func (r *TreeMux) Serve(addr string, stages StageVariables) error {
+	r.StageVariables = stages
 	if len(os.Getenv("AWS_EXECUTION_ENV")) == 0 {
 		fmt.Printf("ListenAndServe on %s\n", addr)
 		return http.ListenAndServe(addr, r)

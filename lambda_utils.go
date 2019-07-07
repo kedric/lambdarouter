@@ -1,13 +1,16 @@
 package lambdarouter
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
+	"text/template"
 
 	"github.com/aws/aws-lambda-go/events"
 )
@@ -49,6 +52,7 @@ func LambdaNotAllowed(ctx context.Context, req events.APIGatewayProxyRequest, al
 }
 
 func LambdaNotFound(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	fmt.Printf("%+v\n", req)
 	return events.APIGatewayProxyResponse{
 		StatusCode: 404,
 		Body:       `{"error": "Not Found"}`,
@@ -69,11 +73,11 @@ func RequestToLambda(req *http.Request) (events.APIGatewayProxyRequest, error) {
 	e := events.APIGatewayProxyRequest{
 		HTTPMethod:            req.Method,
 		Path:                  strings.Split(req.URL.RequestURI(), "?")[0],
+		Resource:              strings.Split(req.URL.RequestURI(), "?")[0],
 		Headers:               map[string]string{},
 		QueryStringParameters: map[string]string{},
 		PathParameters:        map[string]string{},
 		StageVariables:        map[string]string{},
-		// Resource:              params.Path,
 	}
 	// e.RequestContext.RequestID = utils.UUID()
 	// e.RequestContext.ResourcePath = params.Path
@@ -83,15 +87,10 @@ func RequestToLambda(req *http.Request) (events.APIGatewayProxyRequest, error) {
 		e.QueryStringParameters[i] = req.URL.Query().Get(i)
 	}
 	for i := range req.Header {
-		if strings.HasPrefix(i, "Stagevariable_") {
-			e.StageVariables[strings.ReplaceAll(i, "Stagevariable_", "")] = req.Header.Get(i)
-			continue
-		}
 		e.Headers[i] = req.Header.Get(i)
 	}
 	e.Headers["X-Forwarded-For"] = GetForwarded(req)
 	if req.Body != nil {
-
 		b, _ := ioutil.ReadAll(req.Body)
 		e.Body = fmt.Sprintf("%s", b)
 	}
@@ -103,16 +102,35 @@ func ResToHttp(w http.ResponseWriter, req *http.Request, res events.APIGatewayPr
 		w.Header().Set(key, res.Headers[key])
 	}
 	w.WriteHeader(res.StatusCode)
+	if res.IsBase64Encoded {
+		data, err := base64.StdEncoding.DecodeString(res.Body)
+		if err != nil {
+			return w.Write([]byte(fmt.Sprintf("Error on decoding base64: %s\n", err.Error())))
+		}
+		w.Write(data)
+		return
+	}
 	w.Write([]byte(res.Body))
 }
 
 func HttpAddParams(event events.APIGatewayProxyRequest, params map[string]string) events.APIGatewayProxyRequest {
-	// for i := range params {
-	// 	if params[i].Key == "__stage__" {
-	// 		event.RequestContext.Stage = params[i].Value
-	// 		continue
-	// 	}
-	// }
 	event.PathParameters = params
 	return event
+}
+
+func UseTemplate(event events.APIGatewayProxyRequest) string {
+	tmpResource := strings.ReplaceAll(event.Resource, "{", "{{.")
+	tmpResource = strings.ReplaceAll(tmpResource, "}", "}}")
+	tmpResource = strings.ReplaceAll(tmpResource, "+", "")
+	tmpl, err := template.New("route").Parse(tmpResource)
+	if err != nil {
+		return event.Path
+	}
+	out := bytes.NewBuffer([]byte{})
+	tmpl.Execute(out, event.PathParameters)
+	return string(out.Bytes())
+}
+
+func CleanPath(event events.APIGatewayProxyRequest) string {
+	return UseTemplate(event)
 }
