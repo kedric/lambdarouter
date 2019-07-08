@@ -105,7 +105,8 @@ func ResToHttp(w http.ResponseWriter, req *http.Request, res events.APIGatewayPr
 	if res.IsBase64Encoded {
 		data, err := base64.StdEncoding.DecodeString(res.Body)
 		if err != nil {
-			return w.Write([]byte(fmt.Sprintf("Error on decoding base64: %s\n", err.Error())))
+			w.Write([]byte(fmt.Sprintf("Error on decoding base64: %s\n", err.Error())))
+			return
 		}
 		w.Write(data)
 		return
