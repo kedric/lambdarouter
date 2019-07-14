@@ -6,7 +6,6 @@ package lambdarouter
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -256,6 +255,7 @@ func (t *TreeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		t.mutex.RLock()
 	}
 	event, _ := RequestToLambda(r)
+
 	result, _ := t.lookup(event)
 	event.RequestContext.Stage = result.params["__stage__"]
 	event.StageVariables = t.StageVariables[result.params["__stage__"]]
@@ -264,7 +264,13 @@ func (t *TreeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if t.SafeAddRoutesWhileRunning {
 		t.mutex.RUnlock()
 	}
-
+	if t.authorizer != nil {
+		res, err := t.authorizer(context.Background(), GenerateLambdaAuthorizer(event))
+		if err != nil {
+			fmt.Printf("%s\n", err.Error())
+		}
+		event.RequestContext.Authorizer = res.Context
+	}
 	responce, _ := t.ServeLookupResult(context.Background(), event, result)
 	ResToHttp(w, r, responce)
 }
@@ -273,11 +279,7 @@ func (t *TreeMux) ServeLambda(ctx context.Context, req events.APIGatewayProxyReq
 	// if t.PanicHandler != nil {
 	// 	defer t.serveHTTPPanic(w, r)
 	// }
-	data, _ := json.Marshal(req)
-	fmt.Printf("%s\n", data)
 	req.Path = CleanPath(req)
-	data, _ = json.Marshal(req)
-	fmt.Printf("%s\n", data)
 	if t.SafeAddRoutesWhileRunning {
 		// In concurrency safe mode, we acquire a read lock on the mutex for any access.
 		// This is optional to avoid potential performance loss in high-usage scenarios.
@@ -328,13 +330,21 @@ func New() *TreeMux {
 
 type StageVariables map[string]map[string]string
 
+func (r *TreeMux) SetAuthorizer(handler func(ctx context.Context, request events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error)) {
+	r.authorizer = handler
+}
+
 func (r *TreeMux) Serve(addr string, stages StageVariables) error {
 	r.StageVariables = stages
 	if len(os.Getenv("AWS_EXECUTION_ENV")) == 0 {
 		fmt.Printf("ListenAndServe on %s\n", addr)
 		return http.ListenAndServe(addr, r)
 	} else {
-		lambda.Start(r.ServeLambda)
+		if os.Getenv("AUTHORIZER") == "true" {
+			lambda.Start(r.authorizer)
+		} else {
+			lambda.Start(r.ServeLambda)
+		}
 		return nil
 	}
 }

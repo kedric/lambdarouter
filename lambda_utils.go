@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"text/template"
 
@@ -134,4 +135,22 @@ func UseTemplate(event events.APIGatewayProxyRequest) string {
 
 func CleanPath(event events.APIGatewayProxyRequest) string {
 	return UseTemplate(event)
+}
+
+func GenerateArn(event events.APIGatewayProxyRequest) string {
+	return fmt.Sprintf("arn:aws:execute-api:%s:%s:%s/*/%s/%s", os.Getenv("AWS_REGION"), os.Getenv("AWS_ACCOUNT_ID"), "localhost", event.HTTPMethod, event.Path)
+}
+
+func GenerateLambdaAuthorizer(event events.APIGatewayProxyRequest) events.APIGatewayCustomAuthorizerRequestTypeRequest {
+	return events.APIGatewayCustomAuthorizerRequestTypeRequest{
+		MethodArn:                       GenerateArn(event),
+		Path:                            event.Path,
+		HTTPMethod:                      event.HTTPMethod,
+		Headers:                         event.Headers,
+		MultiValueHeaders:               event.MultiValueHeaders,
+		QueryStringParameters:           event.QueryStringParameters,
+		MultiValueQueryStringParameters: event.MultiValueQueryStringParameters,
+		PathParameters:                  event.PathParameters,
+		StageVariables:                  event.StageVariables,
+	}
 }

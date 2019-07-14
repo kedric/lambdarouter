@@ -36,7 +36,7 @@ func main() {
 	router.GET("/", Index)
 	router.GET("/hello/:name", Hello)
 
-	router.Serve(":8080")
+	router.Serve(":8080", nil)
 }
 ```
 
@@ -47,13 +47,33 @@ on mux server all path has prefixed by ```/:__stage__```
 when request oncomming the stage variable is stored in event.RequestContext.Stage 
 
 ## Stage Variables
-if you need to pass a stageVariables to lambda with http handler use the header ```Stagevariable_{var_name}```
+if you need to pass a stageVariables to lambda with http handler add them on serv
+
 exemple: 
 ```
-request header:
-Stagevariable_foo=bar
+var variables = lambdarouter.StageVariables{
+	"stagename": {
+		"variablename":       "value",
+	},
+}
 
-lambda handler:
-print(req.StageVariables["foo"]) // output: bar 
+router.Serv(":8080", variables)
 ``` 
+
+## Authorizer
+For use authorizer add handler function by router.SetAuthorizer(handler)
+```go
+func authorizer (ctx context.Context, request events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
+	...
+}
+
+func main() {
+	router := lambdarouter.New()
+	router.SetAuthorizer(authorizer)
+	router.Serve(":8080", nil)
+}
+```
+
+On deployment you need to set env variable AUTORIZER = true. 
+
 

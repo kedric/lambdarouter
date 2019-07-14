@@ -27,6 +27,7 @@ type TreeMux struct {
 	// if set, instead of calling MethodNotAllowedHandler.
 	OptionsHandler HandlerFunc
 
+	authorizer func(ctx context.Context, request events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error)
 	// MethodNotAllowedHandler is called when a pattern matches, but that
 	// pattern does not have a handler for the requested method. The default
 	// handler just writes the status code http.StatusMethodNotAllowed and adds
