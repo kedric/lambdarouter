@@ -4,7 +4,6 @@ it was modified for use on AWS Lambda and take all advantage on this
 it's possible to use on local with builtin server 
 NOT USE BUILTIN SERVER ON PRODUCTION
 
-
 ## Usage
 
 ```go
@@ -77,4 +76,4 @@ func main() {
 }
 ```
 When you use builtin server it was call befor handler and passed on request.
-When you deploy on lambda create spesific lambda with env variable AUTORIZER = true. 
+When you deploy on lambda create spesific lambda with env variable AUTHORIZER = true. 
