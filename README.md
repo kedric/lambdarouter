@@ -1,7 +1,8 @@
 This router is fully based on https://github.com/dimfeld/httptreemux
 it was modified for use on AWS Lambda and take all advantage on this  
 
-it's possible to use on local with mux server
+it's possible to use on local with builtin server 
+NOT USE BUILTIN SERVER ON PRODUCTION
 
 
 ## Usage
@@ -61,6 +62,8 @@ router.Serv(":8080", variables)
 ``` 
 
 ## Authorizer
+ON PROGRESS
+
 For use authorizer add handler function by router.SetAuthorizer(handler)
 ```go
 func authorizer (ctx context.Context, request events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
@@ -73,7 +76,5 @@ func main() {
 	router.Serve(":8080", nil)
 }
 ```
-
-On deployment on lambda you need to set env variable AUTORIZER = true. 
-
-
+When you use builtin server it was call befor handler and passed on request.
+When you deploy on lambda create spesific lambda with env variable AUTORIZER = true. 
