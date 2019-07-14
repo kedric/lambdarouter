@@ -1,10 +1,13 @@
 package lambdarouter
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/aws/aws-lambda-go/events"
 )
 
 // When we find a node with a matching path but no handler for a method,
@@ -18,16 +21,17 @@ func TestMethodNotAllowedFallthrough(t *testing.T) {
 	router := New()
 
 	addRoute := func(method, path string) {
-		router.Handle(method, path, func(w http.ResponseWriter, r *http.Request, params map[string]string) {
+		router.Handle(method, path, func(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 			matchedMethod = method
 			matchedPath = path
-			matchedParams = params
+			matchedParams = req.PathParameters
+			return events.APIGatewayProxyResponse{StatusCode: 200}, nil
 		})
 	}
 
 	checkRoute := func(method, path, expectedMethod, expectedPath string,
 		expectedCode int, expectedParams map[string]string) {
-
+		path = "/__stage__" + path
 		matchedMethod = ""
 		matchedPath = ""
 		matchedParams = nil

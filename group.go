@@ -3,7 +3,6 @@ package lambdarouter
 import (
 	"fmt"
 	"net/url"
-	"os"
 	"strings"
 )
 
@@ -90,9 +89,7 @@ func (g *Group) NewGroup(path string) *Group {
 // 	GET /posts/ will match normally.
 // 	POST /posts will redirect to /posts/, because the GET method used a trailing slash.
 func (g *Group) Handle(method string, path string, handler HandlerFunc) {
-	if len(os.Getenv("AWS_EXECUTION_ENV")) == 0 {
-		path = "/:__stage__" + path
-	}
+
 	g.mux.mutex.Lock()
 	defer g.mux.mutex.Unlock()
 

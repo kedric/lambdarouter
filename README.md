@@ -50,7 +50,7 @@ when request oncomming the stage variable is stored in event.RequestContext.Stag
 if you need to pass a stageVariables to lambda with http handler add them on serv
 
 exemple: 
-```
+```go
 var variables = lambdarouter.StageVariables{
 	"stagename": {
 		"variablename":       "value",
@@ -74,6 +74,6 @@ func main() {
 }
 ```
 
-On deployment you need to set env variable AUTORIZER = true. 
+On deployment on lambda you need to set env variable AUTORIZER = true. 
 
 

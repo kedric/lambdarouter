@@ -53,7 +53,6 @@ func LambdaNotAllowed(ctx context.Context, req events.APIGatewayProxyRequest, al
 }
 
 func LambdaNotFound(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	fmt.Printf("%+v\n", req)
 	return events.APIGatewayProxyResponse{
 		StatusCode: 404,
 		Body:       `{"error": "Not Found"}`,

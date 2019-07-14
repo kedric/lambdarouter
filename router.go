@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -227,14 +228,12 @@ func (t *TreeMux) ServeLookupResult(ctx context.Context, req events.APIGatewayPr
 				t.mutex.RLock()
 				defer t.mutex.RUnlock()
 			}
-			allow := ""
+			allow := []string{}
 			for i := range lr.leafHandler {
-				if len(allow) > 0 {
-					allow += ","
-				}
-				allow += i
+				allow = append(allow, i)
 			}
-			return t.MethodNotAllowedHandler(ctx, req, allow)
+			sort.Strings(allow)
+			return t.MethodNotAllowedHandler(ctx, req, strings.Join(allow, " "))
 		} else {
 			return t.NotFoundHandler(ctx, req)
 		}
@@ -325,6 +324,9 @@ func New() *TreeMux {
 		EscapeAddedRoutes:       false,
 	}
 	tm.Group.mux = tm
+	if len(os.Getenv("AWS_EXECUTION_ENV")) == 0 {
+		tm.Group = *tm.NewGroup("/:__stage__")
+	}
 	return tm
 }
 

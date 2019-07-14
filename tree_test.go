@@ -1,19 +1,26 @@
 package lambdarouter
 
 import (
-	"net/http"
+	"context"
 	"testing"
+
+	"github.com/aws/aws-lambda-go/events"
 )
 
-func dummyHandler(w http.ResponseWriter, r *http.Request, urlParams map[string]string) {
-
+func dummyHandler(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	return events.APIGatewayProxyResponse{
+		StatusCode: 200,
+	}, nil
 }
 
 func addPath(t *testing.T, tree *node, path string) {
 	t.Logf("Adding path %s", path)
 	n := tree.addPath(path[1:], nil, false)
-	handler := func(w http.ResponseWriter, r *http.Request, urlParams map[string]string) {
-		urlParams["path"] = path
+	handler := func(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+		req.PathParameters["path"] = path
+		return events.APIGatewayProxyResponse{
+			StatusCode: 200,
+		}, nil
 	}
 	n.setHandler("GET", handler, false)
 }
@@ -54,9 +61,9 @@ func testPath(t *testing.T, tree *node, path string, expectPath string, expected
 		return
 	}
 
-	pathMap := make(map[string]string)
-	handler(nil, nil, pathMap)
-	matchedPath := pathMap["path"]
+	tmp := events.APIGatewayProxyRequest{PathParameters: map[string]string{}}
+	handler(context.Background(), tmp)
+	matchedPath := tmp.PathParameters["path"]
 
 	if matchedPath != expectPath {
 		t.Errorf("Path %s matched %s, expected %s", path, matchedPath, expectPath)
@@ -223,7 +230,7 @@ func TestTree(t *testing.T) {
 	testPath(t, tree, "//post//abc//page//2", "", nil)
 
 	t.Log("Test retrieval of duplicate paths")
-	params := make(map[string]string)
+	// params := make(map[string]string)
 	p := "date/:year/:month/abc"
 	n := tree.addPath(p, nil, false)
 	if n == nil {
@@ -232,8 +239,9 @@ func TestTree(t *testing.T) {
 		handler, ok := n.leafHandler["GET"]
 		matchPath := ""
 		if ok {
-			handler(nil, nil, params)
-			matchPath = params["path"]
+			tmp := events.APIGatewayProxyRequest{PathParameters: map[string]string{}}
+			handler(context.Background(), tmp)
+			matchPath = tmp.PathParameters["path"]
 		}
 
 		if len(matchPath) < 2 || matchPath[1:] != p {
