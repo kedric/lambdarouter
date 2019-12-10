@@ -18,6 +18,7 @@ import (
 )
 
 // The params argument contains the parameters parsed from wildcards and catch-alls in the URL.
+// type HandlerFunc func(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error)
 type HandlerFunc func(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error)
 type PanicHandler func(http.ResponseWriter, *http.Request, interface{})
 
@@ -322,6 +323,7 @@ func New() *TreeMux {
 		RedirectMethodBehavior:  make(map[string]RedirectBehavior),
 		PathSource:              RequestURI,
 		EscapeAddedRoutes:       false,
+		WebsocketMux:            WebsocketMux{wsevent: map[string]WebsocketHandler{}},
 	}
 	tm.Group.mux = tm
 	if len(os.Getenv("AWS_EXECUTION_ENV")) == 0 {
@@ -336,17 +338,25 @@ func (r *TreeMux) SetAuthorizer(handler func(ctx context.Context, request events
 	r.authorizer = handler
 }
 
+func (r *TreeMux) lambdaListener(ctx context.Context, event map[string]interface{}) (interface{}, error) {
+	switch GetEventType(ctx, event) {
+	case Http:
+		return r.ServeLambda(ctx, toHttpEvent(event))
+	case Websocket:
+		return r.WebsocketMux.dispatch(ctx, event)
+	case Authorizer:
+		return r.authorizer(ctx, toAuthorizerEvent(event))
+	}
+	return nil, nil
+}
+
 func (r *TreeMux) Serve(addr string, stages StageVariables) error {
 	r.StageVariables = stages
 	if len(os.Getenv("AWS_EXECUTION_ENV")) == 0 {
 		fmt.Printf("ListenAndServe on %s\n", addr)
 		return http.ListenAndServe(addr, r)
 	} else {
-		if os.Getenv("AUTHORIZER") == "true" {
-			lambda.Start(r.authorizer)
-		} else {
-			lambda.Start(r.ServeLambda)
-		}
+		lambda.Start(r.lambdaListener)
 		return nil
 	}
 }

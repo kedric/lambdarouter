@@ -17,6 +17,7 @@ type TreeMux struct {
 	mutex sync.RWMutex
 
 	Group
+	WebsocketMux
 
 	// The default PanicHandler just returns a 500 code.
 	PanicHandler PanicHandler

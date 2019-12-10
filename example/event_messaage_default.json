@@ -1,0 +1,36 @@
+{
+	"body": "hello\n",
+	"isBase64Encoded": false,
+	"requestContext": {
+		"apiId": "lauzds1qvb",
+		"connectedAt": 1575626860057,
+		"connectionId": "ERtA5dd0YosAbUg=",
+		"domainName": "lauzds1qvb.execute-api.ca-central-1.amazonaws.com",
+		"eventType": "MESSAGE",
+		"extendedRequestId": "ERtBlHfR4osFntQ=",
+		"identity": {
+			"accessKey": null,
+			"accountId": null,
+			"caller": null,
+			"cognitoAuthenticationProvider": null,
+			"cognitoAuthenticationType": null,
+			"cognitoIdentityId": null,
+			"cognitoIdentityPoolId": null,
+			"principalOrgId": null,
+			"sourceIp": "86.246.172.219",
+			"user": null,
+			"userAgent": null,
+			"userArn": null
+		},
+		"messageDirection": "IN",
+		"messageId": "ERtBldeUYosAbUg=",
+		"requestId": "ERtBlHfR4osFntQ=",
+		"requestTime": "06/Dec/2019:10:07:44 +0000",
+		"requestTimeEpoch": 1575626864488,
+		"routeKey": "$default",
+		"stage": "test"
+	},
+	"stageVariables": {
+		"environment": "test"
+	}
+}

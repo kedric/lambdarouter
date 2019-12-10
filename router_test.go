@@ -15,7 +15,7 @@ import (
 )
 
 func simpleHandler(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	return events.APIGatewayProxyResponse{StatusCode: 204}, nil
+	return events.APIGatewayProxyResponse{StatusCode: 200}, nil
 }
 
 func panicHandler(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -97,7 +97,7 @@ func TestMethods(t *testing.T) {
 	for _, scenario := range scenarios {
 		t.Log(scenario.description)
 		testMethods(t, scenario.RequestCreator, true, scenario.ServeStyle)
-		// testMethods(t, scenario.RequestCreator, false, scenario.ServeStyle)
+		testMethods(t, scenario.RequestCreator, false, scenario.ServeStyle)
 	}
 }
 

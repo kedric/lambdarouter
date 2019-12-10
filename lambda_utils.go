@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -152,4 +153,57 @@ func GenerateLambdaAuthorizer(event events.APIGatewayProxyRequest) events.APIGat
 		PathParameters:                  event.PathParameters,
 		StageVariables:                  event.StageVariables,
 	}
+}
+
+type EnumEventType int
+
+const (
+	NotFound EnumEventType = iota
+	Http
+	Authorizer
+	Websocket
+)
+
+func mapHaveKeys(_map map[string]interface{}, keys ...string) bool {
+	for _, key := range keys {
+		if _, ok := _map[key]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
+func GetEventType(ctx context.Context, event map[string]interface{}) EnumEventType {
+	tmp, _ := json.Marshal(event)
+	fmt.Printf("%s\n", tmp)
+	if mapHaveKeys(event, "type") {
+		return Authorizer
+	} else {
+		if isWebsocketEvent(event) {
+			return Websocket
+		}
+		return Http
+	}
+	return NotFound
+}
+
+func toHttpEvent(event map[string]interface{}) events.APIGatewayProxyRequest {
+	tmp, _ := json.Marshal(event)
+	ret := events.APIGatewayProxyRequest{}
+	json.Unmarshal(tmp, &ret)
+	return ret
+}
+
+func toWsEvent(event map[string]interface{}) events.APIGatewayWebsocketProxyRequest {
+	tmp, _ := json.Marshal(event)
+	ret := events.APIGatewayWebsocketProxyRequest{}
+	json.Unmarshal(tmp, &ret)
+	return ret
+}
+
+func toAuthorizerEvent(event map[string]interface{}) events.APIGatewayCustomAuthorizerRequestTypeRequest {
+	tmp, _ := json.Marshal(event)
+	ret := events.APIGatewayCustomAuthorizerRequestTypeRequest{}
+	json.Unmarshal(tmp, &ret)
+	return ret
 }

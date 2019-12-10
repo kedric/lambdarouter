@@ -1,0 +1,51 @@
+{
+	"headers": {
+		"Host": "lauzds1qvb.execute-api.ca-central-1.amazonaws.com",
+		"x-api-key": "",
+		"x-restapi": ""
+	},
+	"isBase64Encoded": false,
+	"multiValueHeaders": {
+		"Host": [
+			"lauzds1qvb.execute-api.ca-central-1.amazonaws.com"
+		],
+		"x-api-key": [
+			""
+		],
+		"x-restapi": [
+			""
+		]
+	},
+	"requestContext": {
+		"apiId": "lauzds1qvb",
+		"connectedAt": 1575619581742,
+		"connectionId": "ERbPqfhKYosCGxw=",
+		"domainName": "lauzds1qvb.execute-api.ca-central-1.amazonaws.com",
+		"eventType": "DISCONNECT",
+		"extendedRequestId": "ERcuPHhw4osFlHA=",
+		"identity": {
+			"accessKey": null,
+			"accountId": null,
+			"caller": null,
+			"cognitoAuthenticationProvider": null,
+			"cognitoAuthenticationType": null,
+			"cognitoIdentityId": null,
+			"cognitoIdentityPoolId": null,
+			"principalOrgId": null,
+			"sourceIp": "86.246.172.219",
+			"user": null,
+			"userAgent": null,
+			"userArn": null
+		},
+		"messageDirection": "IN",
+		"messageId": null,
+		"requestId": "ERcuPHhw4osFlHA=",
+		"requestTime": "06/Dec/2019:08:16:27 +0000",
+		"requestTimeEpoch": 1575620187018,
+		"routeKey": "$disconnect",
+		"stage": "test"
+	},
+	"stageVariables": {
+		"environment": "test"
+	}
+}

@@ -49,7 +49,7 @@ func TestMethodNotAllowedFallthrough(t *testing.T) {
 					expectedMethod, expectedPath, matchedMethod, matchedPath)
 			}
 
-			if !reflect.DeepEqual(matchedParams, expectedParams) {
+			if len(expectedParams) != 0 && len(matchedParams) != 0 && !reflect.DeepEqual(matchedParams, expectedParams) {
 				t.Errorf("%s %s expected params %+v, saw %+v", method, path, expectedParams, matchedParams)
 			}
 		}
