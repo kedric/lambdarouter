@@ -174,8 +174,7 @@ func mapHaveKeys(_map map[string]interface{}, keys ...string) bool {
 }
 
 func GetEventType(ctx context.Context, event map[string]interface{}) EnumEventType {
-	tmp, _ := json.Marshal(event)
-	fmt.Printf("%s\n", tmp)
+	// tmp, _ := json.Marshal(event)
 	if mapHaveKeys(event, "type") {
 		return Authorizer
 	} else {
@@ -189,6 +188,7 @@ func GetEventType(ctx context.Context, event map[string]interface{}) EnumEventTy
 
 func toHttpEvent(event map[string]interface{}) events.APIGatewayProxyRequest {
 	tmp, _ := json.Marshal(event)
+	fmt.Printf("httpEvent: %+s\n", tmp)
 	ret := events.APIGatewayProxyRequest{}
 	json.Unmarshal(tmp, &ret)
 	return ret

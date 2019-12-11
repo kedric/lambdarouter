@@ -71,7 +71,7 @@ func NewWebsocket() *WebsocketMux {
 }
 
 func isWebsocketEvent(ev map[string]interface{}) bool {
-	println("tesst resolve", ResolveTemplateSelectionExpression("$request.body.action", ev))
+	// println("tesst resolve", ResolveTemplateSelectionExpression("$request.body.action", ev))
 	if v, ok := ev["requestContext"]; ok {
 		if vi, ok := v.(map[string]interface{}); ok {
 			if _, ok := vi["eventType"]; ok {
