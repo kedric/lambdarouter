@@ -188,7 +188,6 @@ func GetEventType(ctx context.Context, event map[string]interface{}) EnumEventTy
 
 func toHttpEvent(event map[string]interface{}) events.APIGatewayProxyRequest {
 	tmp, _ := json.Marshal(event)
-	fmt.Printf("httpEvent: %+s\n", tmp)
 	ret := events.APIGatewayProxyRequest{}
 	json.Unmarshal(tmp, &ret)
 	return ret

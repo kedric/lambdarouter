@@ -46,19 +46,21 @@ func ResolveTemplateSelectionExpression(original string, request map[string]inte
 	}
 	b := bytes.NewBuffer([]byte{})
 	tmpl.Execute(b, _request)
-	// tmpl.Execute(b, map[string]map[string]interface{}{"body": body})
 	return string(b.Bytes())
 }
 
 func (ws WebsocketMux) dispatch(ctx context.Context, ev map[string]interface{}) (events.APIGatewayProxyResponse, error) {
 	event := toWsEvent(ev)
-	// eventName := ResolveTemplateSelectionExpression(ws.templateSelectionExpression, ev)
+	eventName := ResolveTemplateSelectionExpression(ws.templateSelectionExpression, ev)
+	// println("Ws dispatch, event:name", eventName)
 	switch event.RequestContext.RouteKey {
 	case "$connect":
 	case "$disconnect":
 	case "$default":
 	default:
-
+		if handler, ok := ws.wsevent[eventName]; ok {
+			return handler(ctx, event)
+		}
 	}
 	return events.APIGatewayProxyResponse{
 		StatusCode: 200,
@@ -71,7 +73,6 @@ func NewWebsocket() *WebsocketMux {
 }
 
 func isWebsocketEvent(ev map[string]interface{}) bool {
-	// println("tesst resolve", ResolveTemplateSelectionExpression("$request.body.action", ev))
 	if v, ok := ev["requestContext"]; ok {
 		if vi, ok := v.(map[string]interface{}); ok {
 			if _, ok := vi["eventType"]; ok {
@@ -80,4 +81,8 @@ func isWebsocketEvent(ev map[string]interface{}) bool {
 		}
 	}
 	return false
+}
+
+func (ws *WebsocketMux) SetTemplateSelectionExpression(value string) {
+	ws.templateSelectionExpression = value
 }
